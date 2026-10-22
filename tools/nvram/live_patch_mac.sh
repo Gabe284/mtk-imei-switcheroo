@@ -73,11 +73,24 @@ pull_to_host "$WIFI_PATH" "/sdcard/WIFI_pull"    "$WIFI_BACKUP"
 
 bt_size=$(wc -c < "$BT_BACKUP")
 wf_size=$(wc -c < "$WIFI_BACKUP")
-[ "$bt_size" -eq 440 ]  || die "Unsupported BT_Addr format: pulled $bt_size bytes; this script only recognizes the verified 440-byte legacy layout. This does not prove corruption; refusing to decode or write an unknown format."
-[ "$wf_size" -eq 2050 ] || die "WIFI pulled as $wf_size bytes, expected 2050. Same diagnostic: adb shell su -c 'wc -c $WIFI_PATH'"
+format_errors=0
 
-bt_now=$(python3 "$TOOL" read "$BT_BACKUP" | awk '{print $2}')
-wf_now=$(python3 "$TOOL" read "$WIFI_BACKUP" | awk '{print $3}')
+if [ "$bt_size" -ne 440 ]; then
+    echo "Unsupported BT_Addr format: pulled $bt_size bytes; verified legacy layout is 440 bytes. This does not prove corruption." >&2
+    format_errors=1
+fi
+if [ "$wf_size" -ne 2050 ]; then
+    echo "Unsupported WIFI format: pulled $wf_size bytes; verified legacy layout is 2050 bytes. This does not prove corruption." >&2
+    format_errors=1
+fi
+[ "$format_errors" -eq 0 ] || die "One or more record sizes are unsupported; no decoding or writes will be attempted."
+
+bt_read=$(python3 "$TOOL" read "$BT_BACKUP") || die "BT_Addr format validation failed; no changes made."
+wf_read=$(python3 "$TOOL" read "$WIFI_BACKUP") || die "WIFI format validation failed; no changes made."
+bt_now=$(printf '%s\n' "$bt_read" | awk '{print $2}')
+wf_now=$(printf '%s\n' "$wf_read" | awk '{print $3}')
+[ -n "$bt_now" ] || die "BT_Addr was not recognized by the verified legacy parser; no changes made."
+[ -n "$wf_now" ] || die "WIFI was not recognized by the verified legacy parser; no changes made."
 echo "  Current BT_Addr : $bt_now"
 echo "  Current WIFI MAC: $wf_now"
 echo ""
