@@ -3,7 +3,7 @@
 Run this before choosing an NVRAM tool:
 
 ```sh
-./tools/nvram/device_preflight.sh
+sh tools/nvram/device_preflight.sh
 ```
 
 The script requires an authorized ADB device and attempts read-only property and file-size checks through `adb shell su -c`. It prints device properties, whether root access is available, and the sizes of the repository's expected IMEI, Bluetooth and Wi-Fi records.
