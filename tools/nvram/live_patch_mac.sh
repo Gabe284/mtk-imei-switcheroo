@@ -74,23 +74,48 @@ pull_to_host "$WIFI_PATH" "/sdcard/WIFI_pull"    "$WIFI_BACKUP"
 bt_size=$(wc -c < "$BT_BACKUP")
 wf_size=$(wc -c < "$WIFI_BACKUP")
 format_errors=0
+bt_now=""
+wf_now=""
 
-if [ "$bt_size" -ne 440 ]; then
+if [ "$bt_size" -eq 440 ]; then
+    bt_read=$(python3 "$TOOL" read "$BT_BACKUP" 2>&1)
+    if [ "$?" -eq 0 ]; then
+        bt_now=$(printf '%s\n' "$bt_read" | awk '{print $2}')
+        if [ -n "$bt_now" ]; then
+            echo "Detected BT_Addr: verified legacy 440-byte record."
+        else
+            echo "Unsupported BT_Addr: legacy parser returned no address." >&2
+            format_errors=1
+        fi
+    else
+        echo "Unsupported BT_Addr structure: $bt_read" >&2
+        format_errors=1
+    fi
+else
     echo "Unsupported BT_Addr format: pulled $bt_size bytes; verified legacy layout is 440 bytes. This does not prove corruption." >&2
     format_errors=1
 fi
-if [ "$wf_size" -ne 2050 ]; then
+
+if [ "$wf_size" -eq 2050 ]; then
+    wf_read=$(python3 "$TOOL" read "$WIFI_BACKUP" 2>&1)
+    if [ "$?" -eq 0 ]; then
+        wf_now=$(printf '%s\n' "$wf_read" | awk '{print $3}')
+        if [ -n "$wf_now" ]; then
+            echo "Detected WIFI: verified legacy 2050-byte record."
+        else
+            echo "Unsupported WIFI: legacy parser returned no address." >&2
+            format_errors=1
+        fi
+    else
+        echo "Unsupported WIFI structure: $wf_read" >&2
+        format_errors=1
+    fi
+else
     echo "Unsupported WIFI format: pulled $wf_size bytes; verified legacy layout is 2050 bytes. This does not prove corruption." >&2
     format_errors=1
 fi
-[ "$format_errors" -eq 0 ] || die "One or more record sizes are unsupported; no decoding or writes will be attempted."
 
-bt_read=$(python3 "$TOOL" read "$BT_BACKUP") || die "BT_Addr format validation failed; no changes made."
-wf_read=$(python3 "$TOOL" read "$WIFI_BACKUP") || die "WIFI format validation failed; no changes made."
-bt_now=$(printf '%s\n' "$bt_read" | awk '{print $2}')
-wf_now=$(printf '%s\n' "$wf_read" | awk '{print $3}')
-[ -n "$bt_now" ] || die "BT_Addr was not recognized by the verified legacy parser; no changes made."
-[ -n "$wf_now" ] || die "WIFI was not recognized by the verified legacy parser; no changes made."
+[ "$format_errors" -eq 0 ] || die "One or more records do not match a verified format; no changes made."
 echo "  Current BT_Addr : $bt_now"
 echo "  Current WIFI MAC: $wf_now"
 echo ""
