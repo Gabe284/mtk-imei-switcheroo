@@ -73,7 +73,7 @@ pull_to_host "$WIFI_PATH" "/sdcard/WIFI_pull"    "$WIFI_BACKUP"
 
 bt_size=$(wc -c < "$BT_BACKUP")
 wf_size=$(wc -c < "$WIFI_BACKUP")
-[ "$bt_size" -eq 440 ]  || die "BT_Addr pulled as $bt_size bytes, expected 440. Pull may have been corrupted (e.g. CRLF injection on Android 13 + Magisk over exec-out). The script uses cp + adb pull which is binary-safe; if this fails, inspect $BT_BACKUP and confirm the on-device path: adb shell su -c 'wc -c $BT_PATH'"
+[ "$bt_size" -eq 440 ]  || die "Unsupported BT_Addr format: pulled $bt_size bytes; this script only recognizes the verified 440-byte legacy layout. This does not prove corruption; refusing to decode or write an unknown format."
 [ "$wf_size" -eq 2050 ] || die "WIFI pulled as $wf_size bytes, expected 2050. Same diagnostic: adb shell su -c 'wc -c $WIFI_PATH'"
 
 bt_now=$(python3 "$TOOL" read "$BT_BACKUP" | awk '{print $2}')
