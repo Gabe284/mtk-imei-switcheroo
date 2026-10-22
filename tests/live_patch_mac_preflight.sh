@@ -148,7 +148,7 @@ write_fake_adb "case \"\$1\" in
 esac"
 reset_artifacts
 run_with_path "$FAKE:$SYSPATH" "$FAKE/o" "$SCRIPT </dev/null"
-assert "BT pulled wrong size" "Error: BT_Addr pulled as 10 bytes, expected 440" 1 "$FAKE/o" "$?"
+assert "BT unsupported size is rejected" "Unsupported BT_Addr format: pulled 10 bytes" 1 "$FAKE/o" "$?"
 
 write_fake_adb "case \"\$1\" in
     devices) echo \"List of devices attached\"; printf \"0123456789ABCDEF\tdevice\n\"; echo \"\" ;;
@@ -161,7 +161,7 @@ write_fake_adb "case \"\$1\" in
 esac"
 reset_artifacts
 run_with_path "$FAKE:$SYSPATH" "$FAKE/o" "$SCRIPT </dev/null"
-assert "WIFI pulled wrong size" "Error: WIFI pulled as 5 bytes, expected 2050" 1 "$FAKE/o" "$?"
+assert "WIFI unsupported size is rejected" "Unsupported WIFI format: pulled 5 bytes" 1 "$FAKE/o" "$?"
 
 REAL_WF="$SAMPLES/WIFI.bin"
 write_fake_adb "case \"\$1\" in
