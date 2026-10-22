@@ -21,7 +21,7 @@ ADB and a rooted device. Biloba's full verification workflow has
 
 | Task | Command | Guide |
 | --- | --- | --- |
-| Read-only device and NVRAM size preflight | `./tools/nvram/device_preflight.sh` | [Device preflight](docs/guides/device_preflight.md) |
+| Read-only device and NVRAM size preflight | `sh tools/nvram/device_preflight.sh` | [Device preflight](docs/guides/device_preflight.md) |
 | IMEI in a local file or partition image | `python3 tools/nvram/imei_tool.py` | [Offline IMEI](docs/guides/imei_tool.md) |
 | IMEI on a rooted device | `./tools/nvram/live_patch.sh` | [Live IMEI](docs/guides/live_patch.md) |
 | WiFi/BT addresses in a local file or image | `python3 tools/nvram/mac_tool.py` | [Offline MAC](docs/guides/mac_tool.md) |
@@ -33,7 +33,7 @@ ADB and a rooted device. Biloba's full verification workflow has
 Run from the repository root:
 
 ```sh
-./tools/nvram/device_preflight.sh
+sh tools/nvram/device_preflight.sh
 python3 tools/nvram/imei_tool.py read LD0B_001
 python3 tools/nvram/imei_tool.py read nvdata.img
 python3 tools/nvram/imei_tool.py write LD0B_001 350859600862948 -s 1 -o LD0B_001_new
