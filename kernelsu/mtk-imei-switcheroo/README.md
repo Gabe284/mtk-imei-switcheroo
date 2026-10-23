@@ -1,49 +1,30 @@
-# MTK IMEI Switcheroo — KernelSU package
+# MTK IMEI Switcheroo — KernelSU Next diagnostic package
 
-This directory is packaged by GitHub Actions as an installable KernelSU ZIP.
-The package contains the repository's legacy Python parsers plus an on-device
-read-only format audit.
+This package targets the Moto G 2025 (kansas), MediaTek MT6835, Android 16 / SDK 36.
 
-## Current status
+## Device command set
 
-**Preflight build, not yet a verified MT6835 identifier-switching build.**
+The action uses Android's /system/bin/sh and getprop for device identity. The record audit uses Android Toybox applets wc, od, and tr. It does not require Python, Bash, ADB, or a host-side Linux environment on the phone.
 
-Observed Moto G 2025 (kansas, MT6835) record sizes are:
+Audited paths observed on this device:
+- /mnt/vendor/nvdata/md/NVRAM/NVD_IMEI/LD0B_001
+- /mnt/vendor/nvdata/APCFG/APRDEB/BT_Addr
+- /mnt/vendor/nvdata/APCFG/APRDEB/WIFI
 
-| Record | Observed size | Legacy parser reference | Current interpretation |
+The checker verifies required commands before inspecting records. If a command is missing, or a path is missing/unreadable, it reports an incomplete audit and fails closed. It does not search arbitrary partitions or print raw record bytes, IMEIs, Bluetooth addresses, or Wi-Fi addresses.
+
+## Current format findings
+
+| Record | Observed size | Legacy reference | Result |
 | --- | ---: | ---: | --- |
 | LD0B_001 | 832 bytes | 384 bytes | Unsupported size |
-| BT_Addr | 2416 bytes | 440 bytes | Unsupported size |
-| WIFI | 2050 bytes | 2050 bytes | Size matches, but observed header did not match known legacy headers |
+| BT_Addr | 2,416 bytes | 440 bytes | Unsupported size |
+| WIFI | 2,050 bytes | 2,050 bytes | Header unsupported |
 
-These observations do not establish a record format. No offsets, encryption, checksums,
-or replacement layout are inferred from the size alone.
+These findings do not prove corruption or identify the actual record layout. No offsets, encryption, checksums, or replacement layout are inferred.
 
-## Install and inspect
+## Build and install
 
-1. Download the mtk-imei-switcheroo-kernelsu artifact from the GitHub Actions run.
-2. Install the ZIP in KernelSU Next and reboot only if KernelSU requests it.
-3. Open the module action button to run the read-only audit.
+GitHub Actions packages this directory as mtk-imei-switcheroo-kernelsu.zip. Download the artifact from the workflow run and install it through KernelSU Next. The module has no boot-time service hook and performs no NVRAM or identifier writes. Bundled legacy Python parsers are reference tools only and are not invoked by the on-device action.
 
-The installer adds no boot-time service and does not modify properties, mounts,
-NVRAM, Wi-Fi configuration, or identifiers. The action script reports only file
-sizes and recognized signature status; it does not print identifier bytes.
-
-## Bundled tools and dependencies
-
-GitHub Actions copies tools/nvram/imei_tool.py and mac_tool.py into the
-module ZIP. They preserve the upstream parser's verified legacy format checks.
-They are not automatically run by the action menu. The IMEI tool needs Python
-3 and PyCryptodome; the MAC tool needs Python 3. The Android KernelSU action
-environment does not guarantee either dependency.
-
-The upstream live-patch scripts are intentionally not bundled as live actions:
-they assume host-side ADB and the known legacy layouts, which are not suitable
-as an on-device module workflow for the observed MT6835 records.
-
-## Write gate
-
-No live NVRAM write path is enabled in this preflight build. Enabling one requires
-independent format validation for the exact MT6835 records and tests that establish
-preservation of all unrelated bytes. A successful KernelSU install is not proof
-of format compatibility.
+A matching size or signature is not sufficient to authorize a write. This build is diagnostic-only; it is not an IMEI or MAC switching implementation.
