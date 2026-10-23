@@ -187,7 +187,11 @@ def cmd_read(args):
     if sz == WIFI_FILE_SIZE:
         expected = ' or '.join(h.hex() for h in WIFI_HDR_VARIANTS)
         die(f"file is {sz} bytes (WIFI-shaped) but the header magic does not match {expected} — file may be corrupted or not a real WIFI")
-    die(f"file is {sz} bytes; expected {BT_FILE_SIZE} (BT_Addr), {WIFI_FILE_SIZE} (WIFI), or > 1 MiB (partition image)")
+    die(
+        f"file is {sz} bytes; expected {BT_FILE_SIZE} (verified legacy BT_Addr), "
+        f"{WIFI_FILE_SIZE} (verified legacy WIFI), or > 1 MiB (partition image). "
+        "Unknown record sizes are not auto-decoded; no MT6835-specific layout is inferred."
+    )
 
 
 def cmd_write(args):

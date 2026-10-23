@@ -160,8 +160,18 @@ def load_ld0b(filepath):
         return data
     with open(filepath, 'rb') as f:
         data = f.read()
-    if len(data) != LD0B_SIZE or data[:4] != LD0B_MAGIC:
-        die(f"Not a valid LD0B_001 file (expected {LD0B_SIZE} bytes with LDI header)")
+    if len(data) != LD0B_SIZE:
+        die(
+            f"Unsupported LD0B_001 record size: got {len(data)} bytes; "
+            f"the verified legacy parser accepts exactly {LD0B_SIZE} bytes. "
+            "No alternate MediaTek layout is inferred from size alone; refusing to decode."
+        )
+    if data[:4] != LD0B_MAGIC:
+        die(
+            f"Unsupported LD0B_001 header: expected legacy LDI magic "
+            f"{LD0B_MAGIC.hex()}, got {data[:4].hex()}. "
+            "No alternate MediaTek layout is inferred from an unknown header; refusing to decode."
+        )
     return data
 
 

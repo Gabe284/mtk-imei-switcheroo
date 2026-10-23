@@ -1,0 +1,6 @@
+id=mtk_imei_switcheroo
+name=MTK IMEI Switcheroo (MT6835 Diagnostics)
+version=0.4.0-mt6835-diagnostics
+versionCode=400
+author=Gabe284
+description=Moto G 2025 Kansas MT6835 Android 16 interactive read-only NVRAM diagnostics with configurable in-tree paths; no identifier writes.

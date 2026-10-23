@@ -38,7 +38,7 @@ adb pull "$PULL_STAGE" "$BACKUP" >/dev/null 2>&1 \
 adb shell su -c "rm $PULL_STAGE" </dev/null >/dev/null 2>&1
 
 file_size=$(wc -c < "$BACKUP")
-[ "$file_size" -eq 384 ] || die "LD0B_001 is $file_size bytes (expected 384) - pull may have corrupted the file"
+[ "$file_size" -eq 384 ] || die "Unsupported LD0B_001 format: pulled $file_size bytes; this script only recognizes the verified 384-byte legacy layout. This does not prove corruption; refusing to decode or write an unknown format."
 
 echo ""
 read_output=$(python3 "$TOOL" read "$BACKUP") || die "Read failed (imei_tool.py error above)"
