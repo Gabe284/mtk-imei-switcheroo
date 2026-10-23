@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/build-kernelsu-module.yml"
       - "kernelsu/**"
+      - "tests/kernelsu_static_safety.sh"
       - "tools/nvram/imei_tool.py"
       - "tools/nvram/mac_tool.py"
   push:
