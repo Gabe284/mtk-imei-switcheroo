@@ -1,0 +1,6 @@
+id=mtk_imei_switcheroo
+name=MTK IMEI Switcheroo (Preflight Build)
+version=0.2.0-preflight
+versionCode=200
+author=Gabe284
+description=KernelSU package for MediaTek NVRAM format diagnostics and bundled legacy parsers. Unknown formats are rejected; no boot-time modifications.
