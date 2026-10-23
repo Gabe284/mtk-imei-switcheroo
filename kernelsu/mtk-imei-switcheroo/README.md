@@ -2,14 +2,25 @@
 
 This package targets the Moto G 2025 (kansas), MediaTek MT6835, Android 16 / SDK 36.
 
+## Interactive diagnostic interface
+
+Tap the module's **Action** button in KernelSU Next to open the read-only console. Options:
+
+1. Run a read-only record audit.
+2. Configure record paths for the current action session.
+3. Display the active diagnostic paths.
+4. Exit.
+
+The default paths are prefilled from the device audit. Custom paths are accepted only under `/mnt/vendor/nvdata/`; changes apply only until the action exits and are not persisted. This menu configures diagnostic file locations only, not IMEI/MAC values or any identifier-writing behavior.
+
 ## Device command set
 
-The action uses Android's /system/bin/sh and getprop for device identity. The record audit uses Android Toybox applets wc, od, and tr. It does not require Python, Bash, ADB, or a host-side Linux environment on the phone.
+The action uses Android's `/system/bin/sh` and `getprop` for device identity. The record audit uses Android Toybox applets `wc`, `od`, and `tr`. It does not require Python, Bash, ADB, or a host-side Linux environment on the phone.
 
-Audited paths observed on this device:
-- /mnt/vendor/nvdata/md/NVRAM/NVD_IMEI/LD0B_001
-- /mnt/vendor/nvdata/APCFG/APRDEB/BT_Addr
-- /mnt/vendor/nvdata/APCFG/APRDEB/WIFI
+Audited default paths:
+- `/mnt/vendor/nvdata/md/NVRAM/NVD_IMEI/LD0B_001`
+- `/mnt/vendor/nvdata/APCFG/APRDEB/BT_Addr`
+- `/mnt/vendor/nvdata/APCFG/APRDEB/WIFI`
 
 The checker verifies required commands before inspecting records. If a command is missing, or a path is missing/unreadable, it reports an incomplete audit and fails closed. It does not search arbitrary partitions or print raw record bytes, IMEIs, Bluetooth addresses, or Wi-Fi addresses.
 
@@ -25,6 +36,6 @@ These findings do not prove corruption or identify the actual record layout. No 
 
 ## Build and install
 
-GitHub Actions packages this directory as mtk-imei-switcheroo-kernelsu.zip. Download the artifact from the workflow run and install it through KernelSU Next. The module has no boot-time service hook and performs no NVRAM or identifier writes. Bundled legacy Python parsers are reference tools only and are not invoked by the on-device action.
+GitHub Actions packages this directory as `mtk-imei-switcheroo-kernelsu.zip`. Download the artifact from the workflow run and install it through KernelSU Next. The module has no boot-time service hook and performs no NVRAM or identifier writes. Bundled legacy Python parsers are reference tools only and are not invoked by the on-device action.
 
 A matching size or signature is not sufficient to authorize a write. This build is diagnostic-only; it is not an IMEI or MAC switching implementation.
