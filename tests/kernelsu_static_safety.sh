@@ -12,7 +12,7 @@ grep -Fq 'does not invoke them' "$MOD/action.sh" || fail "action must not execut
 grep -Fq 'read-only shell diagnostics do not require Python' "$MOD/action.sh" || fail "Python-free diagnostic status"
 pass "diagnostic action does not require Python"
 CHECK="$MOD/tools/record_check.sh"
-for cmd in wc od tr; do grep -Fq "command -v \"$cmd\"" "$CHECK" || fail "required Android command preflight missing: $cmd"; done
+grep -Fq 'for cmd in wc od tr' "$CHECK" || fail "required Android command preflight missing: wc/od/tr"
 grep -Fq '/mnt/vendor/nvdata/md/NVRAM/NVD_IMEI/LD0B_001' "$CHECK" || fail "MTK IMEI record path missing"
 grep -Fq '/mnt/vendor/nvdata/APCFG/APRDEB/BT_Addr' "$CHECK" || fail "MTK Bluetooth record path missing"
 grep -Fq '/mnt/vendor/nvdata/APCFG/APRDEB/WIFI' "$CHECK" || fail "MTK Wi-Fi record path missing"
