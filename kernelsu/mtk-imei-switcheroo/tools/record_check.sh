@@ -1,8 +1,19 @@
 #!/system/bin/sh
 # Read-only MT6835 record-format diagnostics. Never write or print record contents.
-IMEI="/mnt/vendor/nvdata/md/NVRAM/NVD_IMEI/LD0B_001"
-BT="/mnt/vendor/nvdata/APCFG/APRDEB/BT_Addr"
-WIFI="/mnt/vendor/nvdata/APCFG/APRDEB/WIFI"
+IMEI_DEFAULT="/mnt/vendor/nvdata/md/NVRAM/NVD_IMEI/LD0B_001"
+BT_DEFAULT="/mnt/vendor/nvdata/APCFG/APRDEB/BT_Addr"
+WIFI_DEFAULT="/mnt/vendor/nvdata/APCFG/APRDEB/WIFI"
+IMEI="${IMEI_PATH:-$IMEI_DEFAULT}"
+BT="${BT_PATH:-$BT_DEFAULT}"
+WIFI="${WIFI_PATH:-$WIFI_DEFAULT}"
+
+# Restrict configurable paths to the vendor NVRAM tree and require absolute paths.
+for path in "$IMEI" "$BT" "$WIFI"; do
+  case "$path" in
+    /mnt/vendor/nvdata/*) ;;
+    *) printf 'ERROR: configured path is outside /mnt/vendor/nvdata/: %s\n' "$path"; exit 1 ;;
+  esac
+done
 
 # Android Toybox/POSIX applets expected on the stock Android 16 image.
 for cmd in wc od tr; do
@@ -22,7 +33,7 @@ check_prefix_record() {
   label="$1" path="$2" expected_size="$3" offset="$4" bytes="$5" expected_hex="$6"
   size="$(size_of "$path")"
   case "$size" in
-    missing/unreadable|'') printf '%s: MISSING/UNREADABLE (expected location not accessible)\n' "$label"; return ;;
+    missing/unreadable|'') printf '%s: MISSING/UNREADABLE (path: %s)\n' "$label" "$path"; return ;;
     *[!0-9]*) printf '%s: SIZE CHECK FAILED; refusing to infer a layout\n' "$label"; return ;;
   esac
   printf '%s: %s bytes; ' "$label" "$size"
@@ -34,13 +45,14 @@ check_prefix_record() {
 
 printf 'Read-only NVRAM record format audit\n'
 printf 'No record contents or identifiers are printed. No files are changed.\n'
-printf 'Commands: Android shell + wc, od, tr (no Python dependency).\n\n'
+printf 'Commands: Android shell + wc, od, tr (no Python dependency).\n'
+printf 'Configured paths are limited to /mnt/vendor/nvdata/.\n\n'
 check_prefix_record "LD0B_001" "$IMEI" 384 0 8 "4c44490010ef0a00"
 check_prefix_record "BT_Addr" "$BT" 440 6 16 "60002310000007000000050703040000"
 
 size="$(size_of "$WIFI")"
 case "$size" in
-  missing/unreadable|'') printf 'WIFI: MISSING/UNREADABLE (expected location not accessible)\n' ;;
+  missing/unreadable|'') printf 'WIFI: MISSING/UNREADABLE (path: %s)\n' "$WIFI" ;;
   *[!0-9]*) printf 'WIFI: SIZE CHECK FAILED; refusing to infer a layout\n' ;;
   2050)
     printf 'WIFI: %s bytes; ' "$size"
@@ -49,5 +61,5 @@ case "$size" in
     ;;
   *) printf 'WIFI: %s bytes; UNSUPPORTED SIZE (legacy reference: 2050 bytes; size alone is not corruption evidence)\n' "$size" ;;
 esac
-printf '\nNote: matching size or signature is not sufficient authorization to write a record.\n'
+printf '\nNote: matching size or signature is not sufficient to authorize a write.\n'
 printf 'STATUS: diagnostics only. No NVRAM writes are implemented or enabled.\n'
