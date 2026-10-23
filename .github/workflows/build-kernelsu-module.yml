@@ -36,7 +36,8 @@ jobs:
           bash -n kernelsu/mtk-imei-switcheroo/action.sh
           bash -n kernelsu/mtk-imei-switcheroo/uninstall.sh
           bash -n kernelsu/mtk-imei-switcheroo/tools/record_check.sh
-          python3 -m py_compile tools/nvram/imei_tool.py tools/nvram/mac_tool.py\n          bash tests/kernelsu_static_safety.sh
+          python3 -m py_compile tools/nvram/imei_tool.py tools/nvram/mac_tool.py
+          bash tests/kernelsu_static_safety.sh
           python3 - <<'PY'
           from pathlib import Path
           import ast
