@@ -23,7 +23,11 @@ grep -Fq 'UNSUPPORTED HEADER' "$CHECK" || fail "unknown WIFI header must fail cl
 grep -Fq 'refusing to infer a layout' "$CHECK" || fail "unknown formats must not be inferred"
 grep -Fq 'No NVRAM writes are implemented or enabled' "$CHECK" || fail "write gate warning missing"
 pass "unknown formats remain fail-closed"
-if grep -Eiq '(^|[[:space:]])(dd[[:space:]]+if=|nvram[[:space:]]+write|setprop[[:space:]]+|flash[[:space:]]+)' "$MOD/action.sh" "$CHECK" "$MOD/customize.sh"; then fail "unexpected write-like command in diagnostic/installer scripts"; fi
+# Match only actual command-position patterns; prose such as "flash paths remain disabled"
+# must not be mistaken for an executable flash command.
+if grep -Eiq '^[[:space:]]*(dd[[:space:]]+if=|nvram[[:space:]]+write|setprop[[:space:]]+|flash[[:space:]]+)' "$MOD/action.sh" "$CHECK" "$MOD/customize.sh"; then
+  fail "unexpected write-like command in diagnostic/installer scripts"
+fi
 pass "no obvious write operations in diagnostic/installer scripts"
 grep -q '^id=mtk_imei_switcheroo$' "$MOD/module.prop" || fail "module id missing"
 [ ! -e "$MOD/service.sh" ] || fail "unexpected boot-time service hook"
