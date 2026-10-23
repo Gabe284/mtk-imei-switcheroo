@@ -8,6 +8,7 @@ WIFI_DEFAULT="/mnt/vendor/nvdata/APCFG/APRDEB/WIFI"
 IMEI_PATH="$IMEI_DEFAULT"
 BT_PATH="$BT_DEFAULT"
 WIFI_PATH="$WIFI_DEFAULT"
+REPLY=""
 
 show_device() {
   printf '\nDevice: %s (%s)\n' "$(getprop ro.product.model)" "$(getprop ro.product.device)"
@@ -29,7 +30,7 @@ valid_path() {
 }
 read_path() {
   prompt="$1" current="$2"
-  printf '%s\nCurrent: %s' "$prompt" "$current"
+  printf '%s\nCurrent: %s\n' "$prompt" "$current"
   printf 'New absolute path (blank keeps current): '
   IFS= read -r entered
   [ -n "$entered" ] || entered="$current"
@@ -37,17 +38,18 @@ read_path() {
     printf 'Rejected: paths must be inside /mnt/vendor/nvdata/.\n'
     return 1
   fi
-  printf '%s' "$entered"
+  REPLY="$entered"
+  return 0
 }
 configure_paths() {
   printf '\nConfigure paths for this run only. No files or records are modified.\n'
   printf 'Only absolute paths under /mnt/vendor/nvdata/ are accepted.\n\n'
-  value="$(read_path 'IMEI record path' "$IMEI_PATH")" || return
-  IMEI_PATH="$value"
-  value="$(read_path 'Bluetooth record path' "$BT_PATH")" || return
-  BT_PATH="$value"
-  value="$(read_path 'Wi-Fi record path' "$WIFI_PATH")" || return
-  WIFI_PATH="$value"
+  read_path 'IMEI record path' "$IMEI_PATH" || return
+  IMEI_PATH="$REPLY"
+  read_path 'Bluetooth record path' "$BT_PATH" || return
+  BT_PATH="$REPLY"
+  read_path 'Wi-Fi record path' "$WIFI_PATH" || return
+  WIFI_PATH="$REPLY"
   printf '\nPaths updated for this action session.\n'
 }
 run_audit() {
