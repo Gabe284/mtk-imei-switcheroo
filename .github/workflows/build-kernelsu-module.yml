@@ -1,0 +1,74 @@
+name: Build KernelSU module
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/build-kernelsu-module.yml"
+      - "kernelsu/**"
+      - "tools/nvram/imei_tool.py"
+      - "tools/nvram/mac_tool.py"
+  push:
+    branches:
+      - main
+      - mt6835-detection-preflight
+    paths:
+      - ".github/workflows/build-kernelsu-module.yml"
+      - "kernelsu/**"
+      - "tools/nvram/imei_tool.py"
+      - "tools/nvram/mac_tool.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate module scripts and bundled Python tools
+        shell: bash
+        run: |
+          set -u
+          bash -n kernelsu/mtk-imei-switcheroo/customize.sh
+          bash -n kernelsu/mtk-imei-switcheroo/action.sh
+          bash -n kernelsu/mtk-imei-switcheroo/uninstall.sh
+          bash -n kernelsu/mtk-imei-switcheroo/tools/record_check.sh
+          python3 -m py_compile tools/nvram/imei_tool.py tools/nvram/mac_tool.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast
+          for name in ("tools/nvram/imei_tool.py", "tools/nvram/mac_tool.py"):
+              ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
+              print(f"PASS Python syntax: {name}")
+          PY
+
+      - name: Assemble KernelSU ZIP
+        shell: bash
+        run: |
+          set -u
+          PACKAGE="kernelsu/mtk-imei-switcheroo"
+          mkdir -p "$PACKAGE/tools/nvram"
+          cp tools/nvram/imei_tool.py "$PACKAGE/tools/nvram/imei_tool.py"
+          cp tools/nvram/mac_tool.py "$PACKAGE/tools/nvram/mac_tool.py"
+          cp tools/nvram/README.md "$PACKAGE/tools/nvram/README.md"
+          chmod 0755 "$PACKAGE/customize.sh" "$PACKAGE/action.sh" "$PACKAGE/uninstall.sh" "$PACKAGE/tools/record_check.sh"
+          chmod 0644 "$PACKAGE/module.prop" "$PACKAGE/README.md" "$PACKAGE/tools/nvram/"*
+          mkdir -p dist
+          (cd "$PACKAGE" && zip -r "../../dist/mtk-imei-switcheroo-kernelsu.zip" .)
+          unzip -l dist/mtk-imei-switcheroo-kernelsu.zip
+          unzip -p dist/mtk-imei-switcheroo-kernelsu.zip module.prop | grep -q '^id=mtk_imei_switcheroo$'
+          unzip -p dist/mtk-imei-switcheroo-kernelsu.zip action.sh | grep -q 'READ-ONLY'
+          unzip -p dist/mtk-imei-switcheroo-kernelsu.zip tools/nvram/imei_tool.py >/dev/null
+          unzip -p dist/mtk-imei-switcheroo-kernelsu.zip tools/nvram/mac_tool.py >/dev/null
+          test "$(unzip -Z1 dist/mtk-imei-switcheroo-kernelsu.zip | grep -c '^module.prop$')" -eq 1
+
+      - name: Upload installable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: mtk-imei-switcheroo-kernelsu
+          path: dist/mtk-imei-switcheroo-kernelsu.zip
+          if-no-files-found: error
+          retention-days: 30
